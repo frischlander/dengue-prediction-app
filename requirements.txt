@@ -21,6 +21,7 @@ fonttools==4.60.0
 fpdf==1.7.2
 fpdf2==2.8.4
 greenlet==3.2.4
+gunicorn==22.0.0
 h11==0.16.0
 html5lib==1.1
 idna==3.10
