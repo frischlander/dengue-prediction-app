@@ -28,7 +28,7 @@ model = None
 def load_model():
     """
     Carrega o modelo de machine learning pré-treinado.
-    
+
     Returns:
         object: Modelo carregado ou None se houver erro
     """
@@ -46,15 +46,15 @@ def load_model():
 def prepare_features(data):
     """
     Prepara os dados recebidos do frontend para o formato esperado pelo modelo.
-    
+
     Args:
         data (dict): Dados recebidos do formulário
-        
+
     Returns:
         pd.DataFrame: DataFrame com as features na ordem correta
     """
-    # Lista das features na ordem exata esperada pelo modelo
-    features = [
+    # Ordem exata das features esperada pelo modelo
+    features_order = [
         'IDADE', 'CS_SEXO_F', 'CS_SEXO_I', 'CS_SEXO_M',
         'CS_RACA_AMARELA', 'CS_RACA_BRANCA', 'CS_RACA_IGNORADO',
         'CS_RACA_INDÍGENA', 'CS_RACA_PARDA', 'CS_RACA_PRETA',
@@ -65,56 +65,42 @@ def prepare_features(data):
         'HEPATOPAT_NÃO', 'HEPATOPAT_SIM', 'RENAL_NÃO', 'RENAL_SIM'
     ]
     
-    # Criar DataFrame com as features na ordem correta
-    df = pd.DataFrame([data], columns=features)
+    # Cria um dicionário com todas as features zeradas
+    processed_data = {feature: 0 for feature in features_order}
     
+    # Atualiza o dicionário com os dados recebidos
+    processed_data.update(data)
+    
+    # Cria o DataFrame na ordem correta
+    df = pd.DataFrame([processed_data])[features_order]
     return df
 
+# Carrega o modelo uma vez na inicialização
+load_model()
+
 @app.route('/')
-def index():
+def home():
     """
-    Rota principal que renderiza a página inicial com o formulário.
-    
-    Returns:
-        str: Template HTML renderizado
+    Rota principal que renderiza a página HTML.
     """
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    Rota para fazer predições com base nos dados enviados pelo frontend.
-    
-    Returns:
-        json: Resultado da predição em formato JSON
+    Rota para realizar a predição com base nos dados do formulário.
     """
     try:
-        # Verificar se o modelo foi carregado
-        if model is None:
-            return jsonify({
-                'error': 'Modelo não carregado. Verifique se o arquivo rf_model_dengue.pkl existe.',
-                'prediction': None
-            }), 500
+        data = request.get_json(force=True)
         
-        # Obter dados JSON da requisição
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({
-                'error': 'Nenhum dado recebido.',
-                'prediction': None
-            }), 400
-        
-        # Preparar os dados para o modelo
+        # Prepara os dados para o modelo
         df = prepare_features(data)
         
-        # Fazer a predição
+        # Realiza a predição
         prediction = model.predict(df)
-        
-        # Extrair o resultado da predição (primeiro elemento do array)
         prediction_result = int(prediction[0])
         
-        # Obter probabilidades se disponível
+        # Tenta obter as probabilidades (opcional)
         try:
             probabilities = model.predict_proba(df)
             prob_negative = float(probabilities[0][0])
@@ -144,7 +130,7 @@ def predict():
 def health_check():
     """
     Rota para verificar o status da aplicação.
-    
+
     Returns:
         json: Status da aplicação
     """
@@ -153,21 +139,3 @@ def health_check():
         'model_loaded': model is not None,
         'message': 'Aplicação funcionando corretamente'
     })
-
-# Carregamento do modelo na inicialização
-if __name__ == '__main__':
-    print("🚀 Iniciando aplicação Flask para Predição de Dengue...")
-    
-    # Carregar o modelo
-    load_model()
-    
-    if model is None:
-        print("⚠️  AVISO: Aplicação iniciada sem modelo carregado!")
-    
-    # Executar a aplicação
-    app.run(
-        debug=True,
-        host='0.0.0.0',
-        port=5000,
-        threaded=True
-    )
