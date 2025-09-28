@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de PrediÃ§Ã£o de Dengue</title>
+    <style>
+        /* Reset e configuraÃ§Ãµes bÃ¡sicas */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            accent-color: #667eea;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkbox-item.checked {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .result-positive {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: 3px solid #c0392b;
+        }
+
+        .result-negative {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            border: 3px solid #00695c;
+        }
+
+        .result-error {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+            border: 3px solid #d63031;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .probability-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- CabeÃ§alho -->
+        <div class="header">
+            <h1>ðŸ¦Ÿ Sistema de PrediÃ§Ã£o de Dengue</h1>
+            <p>AnÃ¡lise preditiva baseada em machine learning para diagnÃ³stico auxiliar</p>
+        </div>
+
+        <!-- FormulÃ¡rio -->
+        <div class="form-container">
+            <form id="predictionForm">
+                <!-- Dados Pessoais -->
+                <div class="form-section">
+                    <h3 class="section-title">ðŸ‘¤ Dados Pessoais</h3>
+                    
+                    <div class="form-group">
+                        <label for="idade">Idade:</label>
+                        <input type="number" id="idade" name="idade" class="form-control" 
+                               min="0" max="120" required placeholder="Digite a idade">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sexo">Sexo:</label>
+                        <select id="sexo" name="sexo" class="form-control" required>
+                            <option value="">Selecione o sexo</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                            <option value="I">Ignorado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="raca">RaÃ§a/Cor:</label>
+                        <select id="raca" name="raca" class="form-control" required>
+                            <option value="">Selecione a raÃ§a/cor</option>
+                            <option value="BRANCA">Branca</option>
+                            <option value="PRETA">Preta</option>
+                            <option value="AMARELA">Amarela</option>
+                            <option value="PARDA">Parda</option>
+                            <option value="INDÃGENA">IndÃ­gena</option>
+                            <option value="IGNORADO">Ignorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sintomas -->
+                <div class="form-section">
+                    <h3 class="section-title">ðŸŒ¡ï¸ Sintomas Apresentados</h3>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="febre" name="sintomas" value="FEBRE">
+                            <label for="febre">Febre</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="mialgia" name="sintomas" value="MIALGIA">
+                            <label for="mialgia">Mialgia (Dor muscular)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cefaleia" name="sintomas" value="CEFALEIA">
+                            <label for="cefaleia">Cefaleia (Dor de cabeÃ§a)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="exantema" name="sintomas" value="EXANTEMA">
+                            <label for="exantema">Exantema (ErupÃ§Ã£o cutÃ¢nea)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="vomito" name="sintomas" value="VOMITO">
+                            <label for="vomito">VÃ´mito</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="petequia" name="sintomas" value="PETEQUIA_N">
+                            <label for="petequia">PetÃ©quias</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comorbidades -->
+                <div class="form-section">
+                    <h3 class="section-title">ðŸ¥ Comorbidades</h3>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="diabetes" name="comorbidades" value="DIABETES">
+                            <label for="diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hematolog" name="comorbidades" value="HEMATOLOG">
+                            <label for="hematolog">DoenÃ§a HematolÃ³gica</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hepatopat" name="comorbidades" value="HEPATOPAT">
+                            <label for="hepatopat">Hepatopatia</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="renal" name="comorbidades" value="RENAL">
+                            <label for="renal">DoenÃ§a Renal</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BotÃ£o de Envio -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    ðŸ” Realizar PrediÃ§Ã£o
+                </button>
+            </form>
+
+            <!-- Ãrea de Resultado -->
+            <div id="resultContainer" class="result-container">
+                <div id="resultContent"></div>
+            </div>
+        </div>
+
+        <!-- RodapÃ© -->
+        <div class="footer">
+            <p>âš ï¸ Este sistema Ã© apenas para fins educacionais e nÃ£o substitui o diagnÃ³stico mÃ©dico profissional.</p>
+        </div>
+    </div>
+
+    <script>
+        // Adicionar interatividade aos checkboxes
+        document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const item = this.closest('.checkbox-item');
+                if (this.checked) {
+                    item.classList.add('checked');
+                } else {
+                    item.classList.remove('checked');
+                }
+            });
+        });
+
+        // FunÃ§Ã£o para coletar e transformar dados do formulÃ¡rio
+        function collectFormData() {
+            const formData = new FormData(document.getElementById('predictionForm'));
+            
+            // Inicializar objeto com todas as features
+            const data = {
+                'IDADE': parseInt(formData.get('idade')) || 0,
+                'CS_SEXO_F': 0, 'CS_SEXO_I': 0, 'CS_SEXO_M': 0,
+                'CS_RACA_AMARELA': 0, 'CS_RACA_BRANCA': 0, 'CS_RACA_IGNORADO': 0,
+                'CS_RACA_INDÃGENA': 0, 'CS_RACA_PARDA': 0, 'CS_RACA_PRETA': 0,
+                'FEBRE_NÃƒO': 1, 'FEBRE_SIM': 0,
+                'MIALGIA_NÃƒO': 1, 'MIALGIA_SIM': 0,
+                'CEFALEIA_NÃƒO': 1, 'CEFALEIA_SIM': 0,
+                'EXANTEMA_NÃƒO': 1, 'EXANTEMA_SIM': 0,
+                'VOMITO_NÃƒO': 1, 'VOMITO_SIM': 0,
+                'PETEQUIA_N_NÃƒO': 1, 'PETEQUIA_N_SIM': 0,
+                'DIABETES_NÃƒO': 1, 'DIABETES_SIM': 0,
+                'HEMATOLOG_NÃƒO': 1, 'HEMATOLOG_SIM': 0,
+                'HEPATOPAT_NÃƒO': 1, 'HEPATOPAT_SIM': 0,
+                'RENAL_NÃƒO': 1, 'RENAL_SIM': 0
+            };
+
+            // One-hot encoding para sexo
+            const sexo = formData.get('sexo');
+            if (sexo === 'F') data['CS_SEXO_F'] = 1;
+            else if (sexo === 'I') data['CS_SEXO_I'] = 1;
+            else if (sexo === 'M') data['CS_SEXO_M'] = 1;
+
+            // One-hot encoding para raÃ§a
+            const raca = formData.get('raca');
+            if (raca === 'AMARELA') data['CS_RACA_AMARELA'] = 1;
+            else if (raca === 'BRANCA') data['CS_RACA_BRANCA'] = 1;
+            else if (raca === 'IGNORADO') data['CS_RACA_IGNORADO'] = 1;
+            else if (raca === 'INDÃGENA') data['CS_RACA_INDÃGENA'] = 1;
+            else if (raca === 'PARDA') data['CS_RACA_PARDA'] = 1;
+            else if (raca === 'PRETA') data['CS_RACA_PRETA'] = 1;
+
+            // Processar sintomas
+            const sintomas = formData.getAll('sintomas');
+            sintomas.forEach(sintoma => {
+                if (sintoma === 'FEBRE') {
+                    data['FEBRE_SIM'] = 1;
+                    data['FEBRE_NÃƒO'] = 0;
+                } else if (sintoma === 'MIALGIA') {
+                    data['MIALGIA_SIM'] = 1;
+                    data['MIALGIA_NÃƒO'] = 0;
+                } else if (sintoma === 'CEFALEIA') {
+                    data['CEFALEIA_SIM'] = 1;
+                    data['CEFALEIA_NÃƒO'] = 0;
+                } else if (sintoma === 'EXANTEMA') {
+                    data['EXANTEMA_SIM'] = 1;
+                    data['EXANTEMA_NÃƒO'] = 0;
+                } else if (sintoma === 'VOMITO') {
+                    data['VOMITO_SIM'] = 1;
+                    data['VOMITO_NÃƒO'] = 0;
+                } else if (sintoma === 'PETEQUIA_N') {
+                    data['PETEQUIA_N_SIM'] = 1;
+                    data['PETEQUIA_N_NÃƒO'] = 0;
+                }
+            });
+
+            // Processar comorbidades
+            const comorbidades = formData.getAll('comorbidades');
+            comorbidades.forEach(comorbidade => {
+                if (comorbidade === 'DIABETES') {
+                    data['DIABETES_SIM'] = 1;
+                    data['DIABETES_NÃƒO'] = 0;
+                } else if (comorbidade === 'HEMATOLOG') {
+                    data['HEMATOLOG_SIM'] = 1;
+                    data['HEMATOLOG_NÃƒO'] = 0;
+                } else if (comorbidade === 'HEPATOPAT') {
+                    data['HEPATOPAT_SIM'] = 1;
+                    data['HEPATOPAT_NÃƒO'] = 0;
+                } else if (comorbidade === 'RENAL') {
+                    data['RENAL_SIM'] = 1;
+                    data['RENAL_NÃƒO'] = 0;
+                }
+            });
+
+            return data;
+        }
+
+        // FunÃ§Ã£o para exibir resultado
+        function displayResult(result) {
+            const container = document.getElementById('resultContainer');
+            const content = document.getElementById('resultContent');
+            
+            container.style.display = 'block';
+            
+            if (result.error) {
+                container.className = 'result-container result-error';
+                content.innerHTML = `
+                    <div>âŒ Erro na PrediÃ§Ã£o</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">${result.error}</div>
+                `;
+            } else {
+                const isPositive = result.prediction === 1;
+                container.className = `result-container ${isPositive ? 'result-positive' : 'result-negative'}`;
+                
+                let probabilityText = '';
+                if (result.probability_positive !== null && result.probability_negative !== null) {
+                    const probPercent = (isPositive ? result.probability_positive : result.probability_negative) * 100;
+                    probabilityText = `
+                        <div class="probability-info">
+                            ConfianÃ§a: ${probPercent.toFixed(1)}%
+                        </div>
+                    `;
+                }
+                
+                content.innerHTML = `
+                    <div>${isPositive ? 'ðŸš¨' : 'âœ…'} ${result.message}</div>
+                    ${probabilityText}
+                `;
+            }
+        }
+
+        // Event listener para o formulÃ¡rio
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            // Mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>Processando...';
+            
+            try {
+                // Coletar dados do formulÃ¡rio
+                const data = collectFormData();
+                
+                // Fazer requisiÃ§Ã£o para o backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                // Exibir resultado
+                displayResult(result);
+                
+            } catch (error) {
+                displayResult({
+                    error: 'Erro de conexÃ£o com o servidor. Tente novamente.',
+                    prediction: null
+                });
+            } finally {
+                // Restaurar botÃ£o
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+    </script>
+</body>
+</html>
