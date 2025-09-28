@@ -1,0 +1,65 @@
+**3. Especificações do Backend (`app.py`):**
+
+- **Importações:** Importe `Flask`, `request`, `jsonify`, `render_template` do `flask`, `pandas` como `pd` e `pickle`.
+- **Inicialização do App:** Crie uma instância da aplicação Flask.
+- **Carregamento do Modelo:** Carregue o modelo `rf_model_dengue.pkl` utilizando a biblioteca `pickle` na inicialização do script. O modelo deve ser carregado em uma variável global para evitar recarregá-lo a cada requisição.
+- **Rota Principal (`/`):**
+  - Deve suportar o método `GET`.
+  - Deve renderizar e retornar o arquivo `templates/index.html`.
+- **Rota de Predição (`/predict`):**
+  - Deve suportar o método `POST`.
+  - Deve receber os dados do frontend no formato JSON.
+  - **Processamento de Dados:**
+    1. Extraia os dados JSON da requisição.
+    2. Crie um DataFrame do `pandas` a partir dos dados recebidos.
+    3. **IMPORTANTE:** A ordem das colunas no DataFrame deve ser exatamente esta para corresponder à entrada esperada pelo modelo:
+       ```python
+       features = [
+           'IDADE', 'CS_SEXO_F', 'CS_SEXO_I', 'CS_SEXO_M',
+           'CS_RACA_AMARELA', 'CS_RACA_BRANCA', 'CS_RACA_IGNORADO',
+           'CS_RACA_INDÍGENA', 'CS_RACA_PARDA', 'CS_RACA_PRETA',
+           'FEBRE_NÃO', 'FEBRE_SIM', 'MIALGIA_NÃO', 'MIALGIA_SIM',
+           'CEFALEIA_NÃO', 'CEFALEIA_SIM', 'EXANTEMA_NÃO', 'EXANTEMA_SIM',
+           'VOMITO_NÃO', 'VOMITO_SIM', 'PETEQUIA_N_NÃO', 'PETEQUIA_N_SIM',
+           'DIABETES_NÃO', 'DIABETES_SIM', 'HEMATOLOG_NÃO', 'HEMATOLOG_SIM',
+           'HEPATOPAT_NÃO', 'HEPATOPAT_SIM', 'RENAL_NÃO', 'RENAL_SIM'
+       ]
+       ```
+    4. Utilize o método `predict()` do modelo carregado para fazer a predição no DataFrame.
+  - **Retorno da Resposta:**
+    - A resposta da predição (geralmente um array numpy) deve ser extraída.
+    - Retorne o resultado da predição em formato JSON. Exemplo: `{'prediction': 1}` ou `{'prediction': 0}`.
+
+**4. Especificações do Frontend (`templates/index.html`):**
+
+- **Estrutura HTML:**
+  - Crie um formulário (`<form>`) com campos para coletar os dados do usuário. Use elementos semânticos e `labels` para acessibilidade.
+  - **Campos do Formulário:**
+    - **Idade:** `<input type="number">`
+    - **Sexo:** `<select>` com opções para 'Masculino', 'Feminino', 'Ignorado'.
+    - **Raça:** `<select>` com opções para 'Branca', 'Preta', 'Amarela', 'Parda', 'Indígena', 'Ignorado'.
+    - **Sintomas:** Use `<input type="checkbox">` para cada sintoma (Febre, Mialgia, Cefaleia, Exantema, Vômito, Petéquias).
+    - **Comorbidades:** Use `<input type="checkbox">` para cada comorbidade (Diabetes, Doença Hematológica, Hepatopatia, Doença Renal).
+  - **Botão:** Um `<button type="submit">` para enviar o formulário.
+  - **Área de Resultado:** Uma `<div>` vazia para exibir o resultado da predição.
+- **Lógica JavaScript:**
+  - Adicione um listener de evento para o `submit` do formulário.
+  - No evento de submit, previna o comportamento padrão de recarregamento da página (`event.preventDefault()`).
+  - **Coleta e Transformação de Dados:**
+    1. Colete os valores de todos os campos do formulário.
+    2. Crie um objeto JavaScript para armazenar os dados.
+    3. **Realize o one-hot encoding dos dados categóricos e binários diretamente no JavaScript** para corresponder às 31 colunas esperadas pelo backend. Por exemplo:
+       - Se o usuário selecionar "Feminino" no `<select>` de sexo, o objeto deve ter `CS_SEXO_F: 1`, `CS_SEXO_M: 0`, e `CS_SEXO_I: 0`.
+       - Se o checkbox "Febre" estiver marcado, o objeto deve ter `FEBRE_SIM: 1` e `FEBRE_NÃO: 0`. Se não estiver marcado, deve ser `FEBRE_SIM: 0` e `FEBRE_NÃO: 1`.
+       - Repita essa lógica para todos os campos de sexo, raça, sintomas e comorbidades.
+  - **Requisição à API:**
+    - Utilize a API `fetch()` para enviar os dados (o objeto JavaScript processado) para o endpoint `/predict` do backend.
+    - A requisição deve ser do tipo `POST`, com o `Content-Type` `application/json`, e o corpo (`body`) deve ser o objeto de dados convertido para uma string JSON (`JSON.stringify()`).
+  - **Exibição do Resultado:**
+    - Ao receber a resposta do backend, processe o JSON.
+    - Atualize o conteúdo da `<div>` de resultado para mostrar ao usuário se o diagnóstico é "Positivo para Dengue" (predição 1) ou "Negativo para Dengue" (predição 0). Opcionalmente, mude a cor do texto para vermelho (positivo) ou verde (negativo).
+
+**Ação Final:**
+
+Por favor, gere o código completo e funcional para os arquivos `app.py` e `templates/index.html` com base nas especificações detalhadas acima. Adicione comentários no código para explicar as partes mais importantes, como o carregamento do modelo, o processamento de dados e a requisição `fetch`.
+EOF
